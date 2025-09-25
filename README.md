@@ -84,68 +84,6 @@ Claude Code 的配置文件通常位于：
 获取论文 ID 为 1706.03762 的详细信息
 ```
 
-### VSCode 配置
-
-#### 安装 MCP 插件
-
-1. 在 VSCode 中搜索并安装 "MCP" 或 "Model Context Protocol" 相关插件
-2. 或使用 Continue.dev 等支持 MCP 的插件
-
-#### 配置 Continue.dev
-
-在 VSCode 中安装 Continue.dev 后，创建或编辑 `~/.continue/config.json`：
-
-```json
-{
-  "experimental": {
-    "modelContextProtocol": true
-  },
-  "providers": [
-    {
-      "name": "scholar-mcp",
-      "type": "mcp",
-      "config": {
-        "command": "npx",
-        "args": ["@modelcontextprotocol/server-node", "/path/to/scholar-mcp/dist/scholar-server.js"]
-      }
-    }
-  ]
-}
-```
-
-### Cherry Studio 配置
-
-Cherry Studio 是一个支持 MCP 的桌面 AI 助手应用。
-
-#### 配置步骤
-
-1. 打开 Cherry Studio
-2. 进入设置 (Settings)
-3. 找到 "MCP Servers" 或 "Model Context Protocol" 选项
-4. 添加新的 MCP Server：
-
-```json
-{
-  "name": "scholar-mcp",
-  "command": "npx",
-  "args": ["@modelcontextprotocol/server-node", "/path/to/scholar-mcp/dist/scholar-server.js"],
-  "description": "Academic paper search and retrieval tool"
-}
-```
-
-5. 保存配置并重启 Cherry Studio
-
-#### 使用方法
-
-在 Cherry Studio 中，你可以直接使用自然语言进行学术搜索：
-
-```
-搜索最近5年关于机器学习的论文
-```
-
-```
-帮我查找关于量子计算的相关研究
-```
 
 ### 其他支持 MCP 的客户端
 
