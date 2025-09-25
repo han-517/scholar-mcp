@@ -1,0 +1,19 @@
+{
+  "permissions": {
+    "allow": [
+      "mcp__hugging-face__hf_doc_search",
+      "WebSearch",
+      "WebFetch(domain:arxiv.org)",
+      "WebFetch(domain:info.arxiv.org)",
+      "WebFetch(domain:dblp.org)",
+      "Bash(mkdir:*)",
+      "Bash(npm install:*)",
+      "Bash(npm run build:*)",
+      "Bash(npm test)",
+      "Bash(node:*)",
+      "Bash(curl:*)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}

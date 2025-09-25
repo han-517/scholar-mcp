@@ -1,0 +1,31 @@
+{
+  "name": "scholar-mcp",
+  "version": "1.0.0",
+  "description": "MCP tool for searching academic papers on arXiv and DBLP",
+  "main": "dist/index.js",
+  "type": "module",
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "dev": "tsx watch src/index.ts",
+    "setup": "./setup.sh",
+    "server": "npx @modelcontextprotocol/server-node dist/scholar-server.js",
+    "lint": "echo 'Linting...' && npm run build",
+    "clean": "rm -rf dist/"
+  },
+  "keywords": ["mcp", "arxiv", "dblp", "academic", "research"],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^0.5.0",
+    "axios": "^1.7.0",
+    "xml2js": "^0.6.2",
+    "cheerio": "^1.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "@types/xml2js": "^0.4.14",
+    "tsx": "^4.0.0",
+    "typescript": "^5.0.0"
+  }
+}
