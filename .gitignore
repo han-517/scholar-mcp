@@ -24,6 +24,7 @@ test/
 *.spec.ts
 coverage/
 .nyc_output/
+*.cjs
 
 # Logs
 logs/

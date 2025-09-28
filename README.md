@@ -18,7 +18,7 @@
 npm install
 ```
 
-**注意**: 本项目使用 `npx @modelcontextprotocol/server-node` 来启动MCP服务器，这样可以确保使用最新版本的MCP服务器运行时，无需单独安装。
+**注意**: 本项目使用 `node dist/index.js` 来启动MCP服务器。
 
 ### 2. 编译项目
 
@@ -46,7 +46,7 @@ npm test
 
 ```bash
 # 添加 scholar-mcp server 到 Claude Code
-claude mcp add scholar-mcp npx @modelcontextprotocol/server-node /path/to/scholar-mcp/dist/scholar-server.js
+claude mcp add scholar-mcp node /path/to/scholar-mcp/dist/index.js
 ```
 
 #### 方法二：手动编辑配置文件
@@ -62,8 +62,8 @@ Claude Code 的配置文件通常位于：
 {
   "mcpServers": {
     "scholar-mcp": {
-      "command": "npx",
-      "args": ["@modelcontextprotocol/server-node", "/path/to/scholar-mcp/dist/scholar-server.js"],
+      "command": "node",
+      "args": ["/path/to/scholar-mcp/dist/index.js"],
       "env": {}
     }
   }
@@ -95,8 +95,8 @@ Claude Code 的配置文件通常位于：
 {
   "mcpServers": {
     "scholar-mcp": {
-      "command": "npx",
-      "args": ["@modelcontextprotocol/server-node", "/path/to/scholar-mcp/dist/scholar-server.js"],
+      "command": "node",
+      "args": ["/path/to/scholar-mcp/dist/index.js"],
       "env": {},
       "description": "Academic paper search and retrieval from arXiv and DBLP"
     }
@@ -106,11 +106,11 @@ Claude Code 的配置文件通常位于：
 
 #### 命令行测试
 
-你可以使用 `npx` 直接测试 MCP server：
+你可以直接使用 `node` 测试 MCP server：
 
 ```bash
 # 测试 MCP server
-npx @modelcontextprotocol/server-node /path/to/scholar-mcp/dist/scholar-server.js
+node /path/to/scholar-mcp/dist/index.js
 ```
 
 #### Docker 部署
@@ -128,7 +128,7 @@ COPY . .
 RUN npm run build
 
 EXPOSE 3000
-CMD ["npx", "@modelcontextprotocol/server-node", "dist/scholar-server.js"]
+CMD ["node", "dist/index.js"]
 ```
 
 构建和运行：
@@ -184,7 +184,7 @@ npm run dev
 npm run search-test "your query"
 
 
-# 启动 MCP server (使用npx)
+# 启动 MCP server
 npm run server
 
 # 清理编译文件
@@ -369,7 +369,7 @@ chmod +x dist/scholar-server.js
 设置环境变量启用调试：
 
 ```bash
-DEBUG=scholar-mcp:* node dist/scholar-server.js
+DEBUG=scholar-mcp:* node dist/index.js
 ```
 
 #### 测试工具功能
