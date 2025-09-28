@@ -106,4 +106,5 @@ mcp-*.json
 
 # Downloaded files (user PDFs)
 downloads/
+test-downloads/
 *.pdf

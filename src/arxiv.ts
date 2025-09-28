@@ -14,30 +14,38 @@ export class ArxivAPI {
   }
 
   static async searchPapers(options: {
-    query: string;
+    query?: string;
     maxResults?: number;
     startDate?: string;
     endDate?: string;
     author?: string;
     category?: string;
+    paperId?: string; // Add paperId parameter for direct ID search
   }) {
-    const { query, maxResults = 10, startDate, endDate, author, category } = options;
+    const { query = '', maxResults = 10, startDate, endDate, author, category, paperId } = options;
 
-    let searchQuery = query;
+    let searchQuery = '';
 
-    if (author) {
-      searchQuery += ` au:${author}`;
-    }
+    // If paperId is provided, use it for direct search
+    if (paperId) {
+      searchQuery = `id:${paperId}`;
+    } else {
+      searchQuery = query;
 
-    if (category) {
-      searchQuery += ` cat:${category}`;
-    }
+      if (author) {
+        searchQuery += ` au:${author}`;
+      }
 
-    if (startDate || endDate) {
-      const dateFilter = [];
-      if (startDate) dateFilter.push(startDate);
-      if (endDate) dateFilter.push(endDate);
-      searchQuery += ` submittedDate:[${dateFilter.join(' TO ')}]`;
+      if (category) {
+        searchQuery += ` cat:${category}`;
+      }
+
+      if (startDate || endDate) {
+        const dateFilter = [];
+        if (startDate) dateFilter.push(startDate);
+        if (endDate) dateFilter.push(endDate);
+        searchQuery += ` submittedDate:[${dateFilter.join(' TO ')}]`;
+      }
     }
 
     

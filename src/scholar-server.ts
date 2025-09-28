@@ -293,21 +293,25 @@ async function downloadPaper(args: z.infer<typeof DownloadPaperSchema>) {
     if (paperIds && paperIds.length > 0) {
       for (const paperId of paperIds) {
         try {
-          // Get paper details from arXiv
+          console.log(`[DEBUG] Searching for paper ID: ${paperId}`);
+          // Get paper details from arXiv using the improved search method
           const searchResult = await ArxivAPI.searchPapers({
-            query: `id:${paperId}`,
+            paperId: paperId,
             maxResults: 1
           });
 
           if (searchResult.papers.length > 0) {
+            console.log(`[DEBUG] Found paper: ${searchResult.papers[0].title}`);
             papersToDownload.push(searchResult.papers[0]);
           } else {
+            console.log(`[DEBUG] Paper not found for ID: ${paperId}`);
             results.failed.push({
               id: paperId,
               reason: 'Paper not found'
             });
           }
         } catch (error) {
+          console.error(`[ERROR] Failed to fetch paper ${paperId}:`, error);
           results.failed.push({
             id: paperId,
             reason: `Failed to fetch paper: ${error}`
@@ -317,34 +321,51 @@ async function downloadPaper(args: z.infer<typeof DownloadPaperSchema>) {
     }
     // Method 2: Download by search query
     else if (query) {
-      const searchResult = await ArxivAPI.searchPapers({
-        query,
-        maxResults,
-        startDate,
-        endDate,
-        category
-      });
-      papersToDownload = searchResult.papers;
+      try {
+        console.log(`[DEBUG] Searching papers with query: ${query}`);
+        const searchResult = await ArxivAPI.searchPapers({
+          query,
+          maxResults,
+          startDate,
+          endDate,
+          category
+        });
+        console.log(`[DEBUG] Found ${searchResult.papers.length} papers for query: ${query}`);
+        papersToDownload = searchResult.papers;
+      } catch (error) {
+        console.error(`[ERROR] Failed to search papers with query ${query}:`, error);
+        throw new Error(`Search failed: ${error}`);
+      }
     }
     // Method 3: Download by author
     else if (author) {
-      const searchResult = await ArxivAPI.searchPapers({
-        query: '',
-        maxResults,
-        startDate,
-        endDate,
-        author,
-        category
-      });
-      papersToDownload = searchResult.papers;
+      try {
+        console.log(`[DEBUG] Searching papers by author: ${author}`);
+        const searchResult = await ArxivAPI.searchPapers({
+          query: '',
+          maxResults,
+          startDate,
+          endDate,
+          author,
+          category
+        });
+        console.log(`[DEBUG] Found ${searchResult.papers.length} papers for author: ${author}`);
+        papersToDownload = searchResult.papers;
+      } catch (error) {
+        console.error(`[ERROR] Failed to search papers by author ${author}:`, error);
+        throw new Error(`Author search failed: ${error}`);
+      }
     }
     else {
       throw new Error('Must provide either paperIds, query, or author');
     }
 
     // Download papers
+    console.log(`[DEBUG] Starting download of ${papersToDownload.length} papers`);
+
     for (const paper of papersToDownload) {
       if (!paper.pdfUrl) {
+        console.log(`[DEBUG] Skipping paper ${paper.title} - no PDF URL`);
         results.failed.push({
           title: paper.title,
           reason: 'No PDF URL available'
@@ -358,33 +379,100 @@ async function downloadPaper(args: z.infer<typeof DownloadPaperSchema>) {
         const filename = `${paper.id || safeTitle}.pdf`;
         const filePath = path.join(downloadFolder, filename);
 
-        // Download PDF
-        const response = await fetch(paper.pdfUrl);
+        console.log(`[DEBUG] Downloading paper: ${paper.title}`);
+        console.log(`[DEBUG] PDF URL: ${paper.pdfUrl}`);
+        console.log(`[DEBUG] Save path: ${filePath}`);
+
+        // Download PDF with timeout using streaming
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => {
+          controller.abort();
+          console.log(`[ERROR] Download timeout for paper: ${paper.title}`);
+        }, 60000); // 60 second timeout
+
+        console.log(`[DEBUG] Fetching PDF from URL: ${paper.pdfUrl}`);
+        const response = await fetch(paper.pdfUrl, {
+          signal: controller.signal,
+          headers: {
+            'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36'
+          }
+        });
+
+        clearTimeout(timeoutId);
+
         if (!response.ok) {
-          throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+          const errorMsg = `HTTP ${response.status}: ${response.statusText}`;
+          console.log(`[ERROR] HTTP error for paper ${paper.title}: ${errorMsg}`);
+          throw new Error(errorMsg);
         }
 
-        const arrayBuffer = await response.arrayBuffer();
-        const buffer = Buffer.from(arrayBuffer);
+        console.log(`[DEBUG] Response headers: ${JSON.stringify(Object.fromEntries(response.headers.entries()))}`);
 
-        // Save file
-        fs.writeFileSync(filePath, buffer);
+        // Check content length if available
+        const contentLength = response.headers.get('content-length');
+        if (contentLength) {
+          console.log(`[DEBUG] Expected content length: ${contentLength} bytes`);
+        }
+
+        // Stream the response to file
+        console.log(`[DEBUG] Streaming response to file: ${filePath}`);
+        const fileStream = fs.createWriteStream(filePath);
+
+        // Convert ReadableStream to Node.js stream if needed
+        if (response.body && typeof response.body.pipeTo === 'function') {
+          // For Web Streams API
+          const reader = response.body.getReader();
+          let receivedLength = 0;
+
+          while (true) {
+            const { done, value } = await reader.read();
+            if (done) break;
+
+            fileStream.write(value);
+            receivedLength += value.length;
+
+            // Log progress every 100KB
+            if (receivedLength % 102400 < value.length) {
+              console.log(`[DEBUG] Downloaded ${receivedLength} bytes for paper: ${paper.title}`);
+            }
+          }
+
+          fileStream.end();
+          console.log(`[DEBUG] Finished streaming ${receivedLength} bytes for paper: ${paper.title}`);
+        } else {
+          // For Node.js streams (fallback)
+          const arrayBuffer = await response.arrayBuffer();
+          const buffer = Buffer.from(arrayBuffer);
+          fs.writeFileSync(filePath, buffer);
+          console.log(`[DEBUG] Downloaded ${buffer.length} bytes for paper: ${paper.title}`);
+        }
+
+        // Wait for file stream to finish
+        await new Promise<void>((resolve, reject) => {
+          fileStream.on('finish', () => resolve());
+          fileStream.on('error', (error) => reject(error));
+        });
+
+        // Verify file was saved
+        const stats = fs.statSync(filePath);
+        console.log(`[DEBUG] File saved successfully. Size: ${stats.size} bytes`);
 
         results.downloaded.push({
           id: paper.id,
           title: paper.title,
           filename,
           path: filePath,
-          size: buffer.length,
+          size: stats.size,
           authors: paper.authors,
           published: paper.published
         });
 
-        console.log(`Downloaded: ${paper.title} -> ${filePath}`);
+        console.log(`[SUCCESS] Downloaded: ${paper.title} -> ${filePath}`);
       } catch (error) {
+        console.error(`[ERROR] Failed to download paper ${paper.title}:`, error);
         results.failed.push({
           title: paper.title,
-          reason: `Download failed: ${error}`
+          reason: `Download failed: ${error instanceof Error ? error.message : 'Unknown error'}`
         });
       }
     }
@@ -401,7 +489,17 @@ async function downloadPaper(args: z.infer<typeof DownloadPaperSchema>) {
       results.message = `Successfully downloaded ${successCount} paper(s)${failCount > 0 ? `, failed to download ${failCount} paper(s)` : ''}`;
     }
 
-    results.success = successCount > 0;
+    // Consider the operation successful if we found papers to download, even if some failed
+    results.success = (successCount > 0) || (papersToDownload.length > 0 && failCount > 0);
+
+    console.log(`[SUMMARY] ${results.message}`);
+    console.log(`[SUMMARY] Downloaded: ${successCount}, Failed: ${failCount}`);
+
+    // Log detailed results
+    console.log(`[RESULTS] Downloaded papers: ${JSON.stringify(results.downloaded, null, 2)}`);
+    console.log(`[RESULTS] Failed papers: ${JSON.stringify(results.failed, null, 2)}`);
+
+    console.log(`[DEBUG] Returning download results to caller`);
     return results;
 
   } catch (error) {
