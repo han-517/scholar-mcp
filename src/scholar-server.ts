@@ -92,7 +92,7 @@ function sanitizeSearchResult(results: SearchResult): PublicSearchResult {
 const SearchPapersSchema = z.object({
   source: SourceEnum.default('arxiv').describe('Data source: arxiv (preprints) or venue (published works)'),
   query: z.string().min(1).describe('Search keywords'),
-  show: z.number().int().min(1).max(100).optional().describe('Limit result count via Cool Papers show parameter'),
+  show: z.number().int().min(1).max(100).optional().describe('Limit result count via the show parameter (use 3 for precise targeting, 10-20 for general use to control cost)'),
   skip: z.number().int().min(0).optional().describe('Offset results using the skip parameter'),
   sort: z
     .number()
@@ -137,7 +137,7 @@ const DownloadBatchPapersSchema = z.object({
     .min(1)
     .max(100)
     .optional()
-    .describe('Limit batch downloads to the first N results (show parameter)'),
+    .describe('Limit batch downloads to the first N results (show parameter); set 3 for precise pulls, 10-20 for routine batches to limit cost'),
   skip: z
     .number()
     .int()
@@ -178,7 +178,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => ({
           },
           show: {
             type: 'number',
-            description: 'Maximum number of items to return (show parameter)',
+            description: 'Maximum number of items to return (show parameter); set 3 for precision, 10-20 for typical searches to manage cost',
           },
           skip: {
             type: 'number',
@@ -240,7 +240,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => ({
           },
           show: {
             type: 'number',
-            description: 'Limit number of results to download (show parameter)',
+            description: 'Limit number of results to download (show parameter); use 3 for precise batches, 10-20 for regular pulls to control cost',
           },
           skip: {
             type: 'number',
