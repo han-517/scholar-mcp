@@ -1,31 +1,51 @@
-export interface Paper {
-  id: string;
-  title: string;
-  authors: string[];
-  abstract?: string;
-  published?: string;
-  updated?: string;
-  categories?: string[];
-  doi?: string;
-  journal?: string;
-  booktitle?: string;
-  year?: number;
-  pdfUrl?: string;
-  source: 'arxiv' | 'dblp';
-}
+export type PaperSource = 'arxiv' | 'venue';
 
 export interface SearchOptions {
+  source: PaperSource;
   query: string;
-  maxResults?: number;
-  startDate?: string;
-  endDate?: string;
-  author?: string;
-  category?: string;
+  show?: number;
+  skip?: number;
+  sort?: number;
+}
+
+export interface PaperSummary {
+  id: string;
+  source: PaperSource;
+  rank: number;
+  title: string;
+  detailUrl: string;
+  externalUrl: string;
+  pdfUrl?: string;
+  pdfStars?: number;
+  kimiStars?: number;
+  authors: string[];
+  abstract: string;
+  subjects: string[];
+  publishTime?: string;
+  relatedKeywords: string[];
 }
 
 export interface SearchResult {
-  papers: Paper[];
-  totalResults: number;
-  startIndex: number;
-  itemsPerPage: number;
+  source: PaperSource;
+  query: string;
+  total: number;
+  papers: PaperSummary[];
+}
+
+export interface DownloadOptions {
+  source: PaperSource;
+  paperId: string;
+  downloadFolder: string;
+  filename?: string;
+}
+
+export interface DownloadResult {
+  pdfUrl: string;
+  filePath: string;
+  fileSize: number;
+}
+
+export interface KimiQA {
+  question: string;
+  answer: string;
 }

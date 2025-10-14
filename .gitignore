@@ -108,3 +108,9 @@ mcp-*.json
 downloads/
 test-downloads/
 *.pdf
+
+# Project specific
+.claude/
+AGENTS.md
+CLAUDE.md
+CoolPapers.md
