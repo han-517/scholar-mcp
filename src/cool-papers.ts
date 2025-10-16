@@ -21,8 +21,8 @@ const pipeline = promisify(streamPipeline);
 function buildSearchUrl(options: SearchOptions): string {
   const params = new URLSearchParams();
   params.set('query', options.query);
-  if (typeof options.show === 'number') {
-    params.set('show', options.show.toString());
+  if (typeof options.maxResults === 'number') {
+    params.set('show', options.maxResults.toString());
   }
   if (typeof options.skip === 'number') {
     params.set('skip', options.skip.toString());

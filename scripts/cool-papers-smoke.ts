@@ -33,14 +33,14 @@ async function runSearches() {
   const arxivRaw = await searchPapers({
     source: 'arxiv',
     query: 'swe',
-    show: 2,
+    maxResults: 2,
     sort: 0,
   });
 
   const venueRaw = await searchPapers({
     source: 'venue',
     query: 'swe',
-    show: 2,
+    maxResults: 2,
     sort: 1,
   });
 

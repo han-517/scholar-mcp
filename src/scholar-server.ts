@@ -57,7 +57,7 @@ interface DownloadFailure {
 
 interface BatchSearchReport extends PublicSearchResult {
   params: {
-    show?: number;
+    maxResults?: number;
     skip?: number;
     sort?: number;
   };
@@ -92,7 +92,13 @@ function sanitizeSearchResult(results: SearchResult): PublicSearchResult {
 const SearchPapersSchema = z.object({
   source: SourceEnum.default('arxiv').describe('Data source: arxiv (preprints) or venue (published works)'),
   query: z.string().min(1).describe('Search keywords'),
-  show: z.number().int().min(1).max(100).optional().describe('Limit result count via the show parameter (use 3 for precise targeting, 10-20 for general use to control cost)'),
+  maxResults: z
+    .number()
+    .int()
+    .min(1)
+    .max(100)
+    .optional()
+    .describe('Limit result count (passed through to Cool Papers as the show parameter); use 3 for precise targeting, 10-20 for general use to control cost'),
   skip: z.number().int().min(0).optional().describe('Offset results using the skip parameter'),
   sort: z
     .number()
@@ -131,13 +137,13 @@ const DownloadBatchPapersSchema = z.object({
     .trim()
     .min(1)
     .describe('Keyword query to select papers for batch download'),
-  show: z
+  maxResults: z
     .number()
     .int()
     .min(1)
     .max(100)
     .optional()
-    .describe('Limit batch downloads to the first N results (show parameter); set 3 for precise pulls, 10-20 for routine batches to limit cost'),
+    .describe('Limit batch downloads to the first N results (passed through as the show parameter); set 3 for precise pulls, 10-20 for routine batches to limit cost'),
   skip: z
     .number()
     .int()
@@ -176,9 +182,9 @@ server.setRequestHandler(ListToolsRequestSchema, async () => ({
             type: 'string',
             description: 'Keywords to search for',
           },
-          show: {
+          maxResults: {
             type: 'number',
-            description: 'Maximum number of items to return (show parameter); set 3 for precision, 10-20 for typical searches to manage cost',
+            description: 'Maximum number of items to return (passed as Cool Papers show); set 3 for precision, 10-20 for typical searches to manage cost',
           },
           skip: {
             type: 'number',
@@ -238,9 +244,9 @@ server.setRequestHandler(ListToolsRequestSchema, async () => ({
             type: 'string',
             description: 'Destination folder for the downloaded PDFs',
           },
-          show: {
+          maxResults: {
             type: 'number',
-            description: 'Limit number of results to download (show parameter); use 3 for precise batches, 10-20 for regular pulls to control cost',
+            description: 'Limit number of results to download (passed as Cool Papers show); use 3 for precise batches, 10-20 for regular pulls to control cost',
           },
           skip: {
             type: 'number',
@@ -286,7 +292,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         const searchOptions: SearchOptions = {
           source: validated.source,
           query: validated.query,
-          show: validated.show,
+          maxResults: validated.maxResults,
           skip: validated.skip,
           sort: validated.sort,
         };
@@ -344,7 +350,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         const searchOptions: SearchOptions = {
           source: validated.source,
           query: validated.query,
-          show: validated.show,
+          maxResults: validated.maxResults,
           skip: validated.skip,
           sort: validated.sort,
         };
@@ -353,7 +359,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         const searchReport: BatchSearchReport = {
           ...sanitizeSearchResult(searchResult),
           params: {
-            show: validated.show,
+            maxResults: validated.maxResults,
             skip: validated.skip,
             sort: validated.sort,
           },

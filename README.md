@@ -3,7 +3,7 @@
 基于 [Cool Papers](https://papers.cool) 的 Model Context Protocol (MCP) 服务器，统一封装 arXiv 预印本和已发表 venue 论文的搜索、PDF 下载与 Kimi FAQ 分析能力，并在工具返回结果中自动隐藏站点的内部统计字段。
 
 ## 核心特性
-- 🔍 **统一检索**：通过网页解析直接访问 Cool Papers 的 `arxiv` 与 `venue` 列表，支持 `show`、`skip`、`sort` 参数。
+- 🔍 **统一检索**：通过网页解析直接访问 Cool Papers 的 `arxiv` 与 `venue` 列表，支持 `maxResults`（映射 Cool Papers 的 `show` 参数）、`skip`、`sort`。
 - 📥 **安全下载**：自动提取页面中的 PDF 链接并保存到指定目录，避免手动查找 URL。
 - 🤖 **Kimi FAQ**：抓取 Kimi 生成的问答内容，快速了解论文重点。
 - 🧰 **MCP 原生**：所有功能以工具形式暴露，可在 Claude Code 等客户端按需组合调用。
@@ -35,14 +35,14 @@ claude mcp add scholar-mcp node /absolute/path/to/scholar-mcp/dist/index.js
 
 ## MCP 工具
 ### `search_papers`
-- **参数**：`source` (`arxiv`|`venue`, 默认 `arxiv`)、`query` (必填)、`show`、`skip`、`sort`。
+- **参数**：`source` (`arxiv`|`venue`, 默认 `arxiv`)、`query` (必填)、`maxResults`、`skip`、`sort`。
 - **输出**：`total` 与若干论文条目（字段：`id`、`title`、`externalUrl`、`pdfUrl`、`authors`、`abstract`、`subjects`、`publishTime`、`relatedKeywords`）。内部统计字段会自动剔除。
 - **示例**：
 ```json
 {
   "source": "venue",
   "query": "swe",
-  "show": 5,
+  "maxResults": 5,
   "sort": 1
 }
 ```
@@ -64,7 +64,7 @@ claude mcp add scholar-mcp node /absolute/path/to/scholar-mcp/dist/index.js
 - **注意**：`filename` 仅用于指定自定义文件名；默认使用 `<paperId>.pdf`。
 
 ### `download_batch_papers`
-- **参数**：`source`、`query`、`downloadFolder`，可选 `show`、`skip`、`sort`。
+- **参数**：`source`、`query`、`downloadFolder`，可选 `maxResults`、`skip`、`sort`。
 - **输出**：
   ```json
   {
@@ -74,7 +74,7 @@ claude mcp add scholar-mcp node /absolute/path/to/scholar-mcp/dist/index.js
       "query": "swe",
       "total": 256,
       "papers": [ { "id": "…" } ],
-      "params": { "show": 5, "sort": 0 }
+      "params": { "maxResults": 5, "sort": 0 }
     },
     "successes": [ { "paper": { "id": "…" }, "filePath": "…" } ],
     "failures": [ { "paper": { "id": "…" }, "error": "…" } ]

@@ -3,7 +3,7 @@ export type PaperSource = 'arxiv' | 'venue';
 export interface SearchOptions {
   source: PaperSource;
   query: string;
-  show?: number;
+  maxResults?: number;
   skip?: number;
   sort?: number;
 }
